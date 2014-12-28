@@ -9,6 +9,7 @@
   "author": "",
   "license": "ISC",
   "dependencies": {
+    "cron": "^1.0.5",
     "twitter": "^1.0.1"
   }
 }
