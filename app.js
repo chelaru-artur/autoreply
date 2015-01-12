@@ -17,10 +17,12 @@ var QUERY = 'very sad'; // search querry
 var config = getConfig();
 
 function getConfig() {
-    fs.writeFileSync(CONFIG, '', {flag: 'a'});
-// create config file if doesn't exist else  append nothing
+    fs.writeFileSync(CONFIG, '', {
+        flag: 'a'
+    });
+    // create config file if doesn't exist else  append nothing
     var config = fs.readFileSync(CONFIG, 'utf8'); // read config file;
-// check if valid json
+    // check if valid json
     try {
         var cfg = JSON.parse(config);
     } catch (e) {
@@ -33,7 +35,9 @@ function addLog(str) {
     var LOG = 'log.txt';
     var date = new Date();
     var msg = date + '  ' + str + '\n';
-    fs.writeFileSync(LOG, msg, {flag: 'a'});
+    fs.writeFileSync(LOG, msg, {
+        flag: 'a'
+    });
 }
 
 function randomMsg() {
@@ -43,14 +47,14 @@ function randomMsg() {
 
 function reply(status, callback) {
     var message = '@' + status.user.screen_name + ' ' + randomMsg();
-    client.post('/statuses/update.json', 
-        {
-        status: message,
-        in_reply_to_status_id: status.id_str
+    while (message.length > 130) message = '@' + status.user.screen_name + ' ' + randomMsg();
+    client.post('/statuses/update.json', {
+            status: message,
+            in_reply_to_status_id: status.id_str
         },
         function(err, data) {
             if (err !== null) {
-                callback(err);
+                callback(err, message);
                 return;
             }
             addLog('sent message: ' + data.text);
@@ -58,20 +62,23 @@ function reply(status, callback) {
 }
 
 var search = function() {
-    var params = (config.params) ? config.params : { q: QUERY,count: 8 };
+    var params = (config.params) ? config.params : {
+        q: QUERY,
+        count: 8
+    };
     client.get('/search/tweets.json', params,
         function(err, data) {
             if (err) addLog(JSON.stringify(err));
-// reply statuses , if err then it will be saved to log.txt
+            // reply statuses , if err then it will be saved to log.txt
             data.statuses.forEach(function(status) {
-                reply(status, function(err) {
+                reply(status, function(err, msg) {
                     if (err) {
                         addLog(JSON.stringify(err.data));
                         return;
                     }
                 });
             });
-// set params for next search and write them to config.json
+            // set params for next search and write them to config.json
             if (data.search_metadata.next_results) {
                 config.params = url.parse(data.search_metadata.next_results, true).query;
             } else {
